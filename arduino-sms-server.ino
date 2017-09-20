@@ -10,8 +10,10 @@ int led = 2;
 char senderNumber[20];
 
 String AT = "AT";
-String READ1 = "AT+CMGR=1";
+String READ = "AT+CMGR=";
+String DELETE = "AT+CMGD=1,3";
 String gsmBuffer;
+String outputBuffer = "";
 
 boolean isReady = false;
 
@@ -31,9 +33,14 @@ void setup() {
     }
   }
   // Initialize GSM Module.
-  while (notConnected) {
-    if (sendCommand(AT) == "OK") {
+  String response;
+  while (!isReady) {
+    response = sendCommand(AT);
+    if (response == "AT\r\n\r\nOK" || response == "OK") {
       isReady = true; 
+      sendCommand("ATE0");
+      Serial.println("READY");
+      sendCommand(DELETE);
     }
     delay(1000);
   }
@@ -43,12 +50,40 @@ void setup() {
  * Loop
  */
 void loop() {
-  Serial.println("OK");
-  // Loop through memory location 1 to 15 of SIM Card to read incoming messages.
-  for (int x = 0; x <= 15; x++) {
-    if (sendCommand(getMemoryLocationCommand(x) != "OK") { 
-      
+  static String response;
+  static String phoneNumber;
+  static String message;
+  static int handle1;
+  static int handle2;
+  static String request;
+  request = Serial.readString();
+  if (request == "QUERY VOTES") {
+    // Loop through memory location 1 to 15 of SIM Card to read incoming messages.
+    for (int x = 0; x < 15; x++) {
+      response = sendCommand(READ + (x + 1));
+      if (response != "OK") {
+        handle1 = response.indexOf("\",\"") + 3;
+        phoneNumber = response.substring(handle1, response.indexOf("\"", handle1));
+        handle2 = response.indexOf("\r\n") + 2;
+        message = response.substring(handle2, response.indexOf("\r\n", handle2));
+        message.trim();
+        if (phoneNumber.startsWith("+")) {
+          blinkLED();
+          outputBuffer += "ENTRY-" + phoneNumber + "-" + message + ";"; 
+        }
+      }
     }
+    Serial.println("OK"); 
+  } else if (request == "GET VOTES") {
+    if (outputBuffer == "") {
+      Serial.println("NO VOTES;");
+    } else {
+      Serial.println(outputBuffer);
+      outputBuffer = "";
+    }
+  } else if (request == "CLEAR READ SMSES") {
+    sendCommand(DELETE);
+    Serial.println("OK");
   }
 }
 
@@ -64,17 +99,11 @@ void blinkLED(int times) {
   }
 }
 
-String getMemoryLocationCommand(int x) {
-  switch (x) {
-    case 0:
-      return READ1;
-  }
-}
-
 String sendCommand(String command) {
   mySerial.println(command);
   gsmBuffer = "";
   char c;
+  delay(1000);
   while(mySerial.available()) {
     c = mySerial.read();
     gsmBuffer += c;
