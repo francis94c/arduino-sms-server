@@ -1,14 +1,23 @@
 #include <SoftwareSerial.h>
 
+/*
+ * Global Variables.
+ */
 SoftwareSerial mySerial(9,10); // Rx, Tx.
 
 int led = 2;
 
 char senderNumber[20];
+
 String AT = "AT";
 String READ1 = "AT+CMGR=1";
 String gsmBuffer;
 
+boolean isReady = false;
+
+/**
+ * Setup
+ */
 void setup() {
   Serial.begin(9600);
   mySerial.begin(9600);
@@ -21,20 +30,18 @@ void setup() {
       handshake = true;
     }
   }
-  boolean notConnected = true;
-  // Start GSM connection
+  // Initialize GSM Module.
   while (notConnected) {
     if (sendCommand(AT) == "OK") {
-      notConnected = false; 
+      isReady = true; 
     }
-    delay(1000);
-  }
-  Serial.println("READY");
-  while (readSerial() != "START") {
     delay(1000);
   }
 }
 
+/**
+ * Loop
+ */
 void loop() {
   Serial.println("OK");
   // Loop through memory location 1 to 15 of SIM Card to read incoming messages.
@@ -45,6 +52,9 @@ void loop() {
   }
 }
 
+/**
+ * to blink the LED
+ */
 void blinkLED(int times) {
   for (int x = 0; x <= times; x++) {
     digitalWrite(led, HIGH);
