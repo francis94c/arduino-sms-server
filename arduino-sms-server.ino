@@ -5,7 +5,7 @@
  */
 SoftwareSerial mySerial(9,10); // Rx, Tx.
 
-int led = 2;
+int led = 13;
 
 char senderNumber[20];
 
@@ -21,7 +21,7 @@ boolean isReady = false;
  * Setup
  */
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   mySerial.begin(9600);
   pinMode(led, OUTPUT);
   boolean handshake = false;
@@ -68,7 +68,7 @@ void loop() {
         message = response.substring(handle2, response.indexOf("\r\n", handle2));
         message.trim();
         if (phoneNumber.startsWith("+")) {
-          blinkLED();
+          blinkLED(2);
           outputBuffer += "ENTRY-" + phoneNumber + "-" + message + ";"; 
         }
       }
@@ -84,6 +84,13 @@ void loop() {
   } else if (request == "CLEAR READ SMSES") {
     sendCommand(DELETE);
     Serial.println("OK");
+  } else if (request == "OK") {
+    sendCommand("ATE0");
+    if (sendCommand(AT) != "READY") {
+      Serial.println("NOT READY");
+    } else {
+      Serial.println("READY");
+    }
   }
 }
 
