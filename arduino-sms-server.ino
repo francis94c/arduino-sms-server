@@ -76,7 +76,7 @@ void loop() {
     Serial.println("OK"); 
   } else if (request == "GET VOTES") {
     if (outputBuffer == "") {
-      Serial.println("NO VOTES;");
+      Serial.println("NO VOTES");
     } else {
       Serial.println(outputBuffer);
       outputBuffer = "";
