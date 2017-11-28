@@ -40,7 +40,6 @@ void setup() {
       isReady = true; 
       sendCommand("ATE0");
       Serial.println("READY");
-      sendCommand(DELETE);
     }
     delay(1000);
   }
@@ -57,6 +56,7 @@ void loop() {
   static int handle2;
   static String request;
   request = Serial.readString();
+  request.trim();
   if (request == "QUERY VOTES") {
     // Loop through memory location 1 to 15 of SIM Card to read incoming messages.
     for (int x = 0; x < 15; x++) {
